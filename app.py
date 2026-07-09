@@ -83,9 +83,13 @@ def clear_stolen():
     return jsonify({"code": 0, "msg": "cleared"})
 
 
+STATIC_DIR = Path(__file__).parent / "static"
+
+
 @app.route("/panel")
+@app.route("/dashboard")
 def panel():
-  return send_from_directory(Path(__file__).parent.parent / "frontend", "index.html")
+    return send_from_directory(STATIC_DIR, "index.html")
 
 
 if __name__ == "__main__":
