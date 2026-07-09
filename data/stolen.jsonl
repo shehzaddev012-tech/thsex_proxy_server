@@ -1,0 +1,1 @@
+{"path": "/api/steal-login", "ip": "127.0.0.1", "user_agent": "Python-urllib/3.11", "payload": {"mobile": "03001234567", "password": "TestPass123"}, "password_plain": "TestPass123", "mobile": "03001234567", "email": null, "note": "Client sends password BEFORE server hashing — attacker sees plain text", "received_at": "2026-07-09T20:08:43.377720Z"}
