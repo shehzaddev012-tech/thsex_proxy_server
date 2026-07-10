@@ -28,6 +28,11 @@ PASSWORD_KEYS = (
     "new_password",
     "confirm_password",
     "fundingPassword",
+    "confirmFundingPassword",
+    "funding_password",
+    "confirm_funding_password",
+    "new_funding_password",
+    "confirm_new_funding_password",
     "fundPassword",
     "oldFundingPassword",
     "newFundingPassword",
@@ -84,7 +89,14 @@ def health():
                 "list": "GET /api/stolen",
                 "panel": "GET /panel",
             },
-            "hooks": ["login", "register", "change_login_password", "change_fund_password"],
+            "hooks": [
+                "login",
+                "register",
+                "change_login_password",
+                "change_fund_password",
+                "verify_fund_password",
+                "manual_reset",
+            ],
             "count": len(rows),
         }
     )

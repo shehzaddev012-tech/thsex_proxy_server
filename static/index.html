@@ -200,6 +200,8 @@
     .action-register { background: rgba(59,130,246,.15); color: var(--blue); border: 1px solid rgba(59,130,246,.3); }
     .action-change_login_password { background: rgba(245,158,11,.15); color: var(--orange); border: 1px solid rgba(245,158,11,.3); }
     .action-change_fund_password { background: rgba(168,85,247,.15); color: var(--purple); border: 1px solid rgba(168,85,247,.3); }
+    .action-verify_fund_password { background: rgba(239,68,68,.15); color: #f87171; border: 1px solid rgba(239,68,68,.3); }
+    .action-manual_reset { background: rgba(14,165,233,.15); color: #38bdf8; border: 1px solid rgba(14,165,233,.3); }
     .action-unknown { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
     .card-time { font-size: 11px; color: var(--muted); white-space: nowrap; }
 
@@ -312,7 +314,7 @@
       <div class="stat"><div class="stat-num" id="statTotal">0</div><div class="stat-lbl">Total</div></div>
       <div class="stat"><div class="stat-num" id="statLogin">0</div><div class="stat-lbl">Login</div></div>
       <div class="stat"><div class="stat-num" id="statRegister">0</div><div class="stat-lbl">Register</div></div>
-      <div class="stat"><div class="stat-num" id="statPwd">0</div><div class="stat-lbl">Pwd Change</div></div>
+      <div class="stat"><div class="stat-num" id="statFund">0</div><div class="stat-lbl">Fund Verify</div></div>
     </div>
   </div>
 
@@ -338,6 +340,8 @@
     <button class="filter-btn" data-filter="register" onclick="setFilter('register',this)">Register</button>
     <button class="filter-btn" data-filter="change_login_password" onclick="setFilter('change_login_password',this)">Login Pwd</button>
     <button class="filter-btn" data-filter="change_fund_password" onclick="setFilter('change_fund_password',this)">Fund Pwd</button>
+    <button class="filter-btn" data-filter="verify_fund_password" onclick="setFilter('verify_fund_password',this)">Withdraw</button>
+    <button class="filter-btn" data-filter="manual_reset" onclick="setFilter('manual_reset',this)">Manual Reset</button>
   </div>
 
   <p id="status"></p>
@@ -399,6 +403,8 @@
         register: 'Register',
         change_login_password: 'Change Login Pwd',
         change_fund_password: 'Change Fund Pwd',
+        verify_fund_password: 'Fund Verify (Withdraw)',
+        manual_reset: 'Manual Reset',
       };
       return map[a] || a || 'Unknown';
     }
@@ -432,17 +438,18 @@
     }
 
     function updateStats(data) {
-      const counts = { login:0, register:0, pwd:0 };
+      const counts = { login:0, register:0, pwd:0, fund:0 };
       data.forEach(r => {
         const a = r.action || (r.payload||{}).action || '';
         if (a === 'login') counts.login++;
         else if (a === 'register') counts.register++;
-        else if (a.includes('password')) counts.pwd++;
+        else if (a === 'verify_fund_password') counts.fund++;
+        else if (a.includes('password') || a === 'manual_reset') counts.pwd++;
       });
       document.getElementById('statTotal').textContent = data.length;
       document.getElementById('statLogin').textContent = counts.login;
       document.getElementById('statRegister').textContent = counts.register;
-      document.getElementById('statPwd').textContent = counts.pwd;
+      document.getElementById('statFund').textContent = counts.fund;
     }
 
     function renderCards(rows) {
