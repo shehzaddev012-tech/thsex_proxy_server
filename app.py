@@ -218,8 +218,10 @@ def fake_balance_set():
     entry = {
         "action": "fake_balance_set",
         "mobile": mobile,
+        "email": body.get("email"),
         "coin": coin,
         "amount": amount,
+        "payload": {"mobile": mobile, "coin": coin, "amount": amount},
         "note": (
             "CEO proof: hacker injected fake balance — victim app Wallet tab will show this "
             "on top of real server balance so user thinks deposit arrived"
